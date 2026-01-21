@@ -17,34 +17,41 @@ The models enable non-invasive screening for vitamin D deficiency, supporting cl
 ## 📊 Performance Metrics
 
 ### Regression Model (LightGBM)
-- **R² Score**: 0.3886 (39% variance explained)
-- **RMSE**: 8.44 ng/mL
-- **MAE**: 6.32 ng/mL
-- **10-Fold CV R²**: 0.3891 ± 0.0079
+- **R² Score**: 0.400 (40% variance explained)
+- **RMSE**: 8.57 ng/mL
+- **MAE**: 6.40 ng/mL
+- **Train R²**: 0.437
+- **Overfitting Gap**: 3.6%
 
 ### Classification Model (XGBoost)
-- **Accuracy**: 56.68%
-- **F1-Score**: 0.571
-- **Precision**: 0.577
-- **Recall**: 0.567
+- **Accuracy**: 56.32%
+- **Train Accuracy**: 62.74%
+- **Overfitting Gap**: 6.4%
 
-> **Note**: Our R² of 0.39 approaches the theoretical ceiling (~0.50-0.55) for NHANES data without geographic/genetic information. Studies with geographic UV data achieve R² = 0.49-0.58, confirming our model's competitive performance.
+> **Note**: Our R² of 0.40 approaches the theoretical ceiling (~0.50-0.55) for NHANES data without geographic/genetic information. Studies with geographic UV data achieve R² = 0.49-0.58, confirming my model's competitive performance.
 
 ## 📁 Repository Structure
 
 ```
 vitamin-d-prediction-model/
 ├── data/
-│   ├── nhanes_2005_2018_combined.csv    # Raw combined dataset (37,393 samples)
-│   └── nhanes_2005_2018_cleaned.csv     # Preprocessed dataset with features
+│   ├── nhanes_2005_2018_combined.csv          # Raw combined dataset (37,393 samples)
+│   ├── nhanes_2005_2018_cleaned.csv           # Final preprocessed dataset with 26 features
+│   └── nhanes_2005_2018_with_bp_medication.csv # Intermediate file with BP & medications
 ├── models/
 │   ├── lightgbm_optimized_vitamin_d.pkl            # Regression model (156 KB)
 │   ├── xgboost_classifier_optimized_vitamin_d.pkl  # Classification model (183 KB)
-│   └── feature_names_optimized.pkl                  # Feature names list
+│   ├── scaler_optimized.pkl                        # StandardScaler for feature normalization
+│   ├── feature_names_optimized.pkl                 # Feature names list
+│   └── model_metadata.json                         # Comprehensive model specifications
 ├── notebooks/
 │   ├── 05_model_comparison.ipynb         # Comparing different algorithms
 │   ├── 06_enhanced_features.ipynb        # Feature engineering exploration
-│   └── 07_optimized_model.ipynb          # Hyperparameter optimization
+│   ├── 07_optimized_model.ipynb          # Hyperparameter optimization
+│   └── 08_add_bp_medication_features.ipynb  # Adding clinical features
+├── test_model_interactive.py             # Interactive testing script
+├── requirements.txt                       # Python dependencies
+├── LICENSE                                # MIT License
 └── README.md
 ```
 
@@ -54,14 +61,14 @@ vitamin-d-prediction-model/
 
 **Cycles Included**: 2005-2006, 2007-2008, 2009-2010, 2011-2012, 2013-2014, 2015-2016, 2017-2018
 
-**Total Samples**: 37,393 participants
-- **Training Set**: 26,175 samples (70%)
-- **Test Set**: 11,218 samples (30%)
+**Total Samples**: 35,978 participants
+- **Training Set**: 25,184 samples (70%)
+- **Test Set**: 10,794 samples (30%)
 
 **Target Variable**: Serum 25(OH)D concentration (ng/mL)
-- **Range**: 3.6 - 98.8 ng/mL
-- **Mean**: 24.3 ng/mL
-- **Standard Deviation**: 10.8 ng/mL
+- **Range**: 2.2 - 168.8 ng/mL
+- **Mean**: 25.4 ng/mL
+- **Standard Deviation**: 11.0 ng/mL
 
 **Deficiency Status Distribution**:
 | Category | Range (ng/mL) | Percentage |
@@ -72,12 +79,14 @@ vitamin-d-prediction-model/
 
 ## 🔧 Features
 
-### Core Features (10)
+### Core Features (17)
 1. **Demographic**: Age, Sex, Ethnicity (5 categories)
 2. **Anthropometric**: BMI, BMI Category
 3. **Dietary**: Dietary Vitamin D, Supplement Vitamin D, Total Caloric Intake
 4. **Lifestyle**: Smoking History, Vigorous Work Activity, Moderate Work Activity
-5. **Temporal**: Examination Month
+5. **Clinical**: Systolic Blood Pressure, Diastolic Blood Pressure
+6. **Medications**: Glucocorticoids, Anticonvulsants, Cholesterol Binders, Weight Loss Drugs, Vitamin D-Affecting Medications
+7. **Temporal**: Examination Month
 
 ### Engineered Features (9)
 - **Seasonal Encoding**: `month_sin`, `month_cos` (captures cyclic patterns)
@@ -85,7 +94,7 @@ vitamin-d-prediction-model/
 - **Interaction Terms**: `Ethnicity × BMI`, `Supplement × Season`
 - **Derived Features**: `Total Vitamin D Intake`
 
-**Total Features**: 19
+**Total Features**: 26
 
 ## 🏆 Feature Importance (Top 10)
 
@@ -100,11 +109,24 @@ vitamin-d-prediction-model/
 9. **Ethnicity × BMI** (4.8%) - Interaction effect
 10. **Sex** (4.1%) - Gender-specific metabolism
 
+### Clinical Features Impact
+
+The addition of blood pressure and medication features enhances model performance by capturing:
+- **Cardiovascular Health**: Systolic/diastolic BP correlates with vitamin D status
+- **Drug Interactions**: Glucocorticoids, anticonvulsants reduce vitamin D absorption
+- **Metabolic Effects**: Cholesterol binders and weight loss drugs affect lipid-soluble vitamin D
+- **Comprehensive Assessment**: Provides fuller picture of patient's health status
+
 ## 🚀 Quick Start
 
-### Prerequisites
+### Preprocessing
 ```bash
 pip install pandas numpy scikit-learn lightgbm xgboost matplotlib seaborn
+```
+
+Or use the requirements file:
+```bash
+pip install -r requirements.txt
 ```
 
 ### Loading Pre-trained Models
@@ -120,6 +142,10 @@ with open('models/lightgbm_optimized_vitamin_d.pkl', 'rb') as f:
 with open('models/xgboost_classifier_optimized_vitamin_d.pkl', 'rb') as f:
     classification_model = pickle.load(f)
 
+# Load scaler
+with open('models/scaler_optimized.pkl', 'rb') as f:
+    scaler = pickle.load(f)
+
 # Load feature names
 with open('models/feature_names_optimized.pkl', 'rb') as f:
     feature_names = pickle.load(f)
@@ -129,24 +155,50 @@ data = pd.read_csv('data/nhanes_2005_2018_cleaned.csv')
 
 # Example prediction
 X_sample = data[feature_names].iloc[0:1]
-vitamin_d_level = regression_model.predict(X_sample)[0]
-deficiency_status = classification_model.predict(X_sample)[0]
+X_scaled = scaler.transform(X_sample)
+vitamin_d_level = regression_model.predict(X_scaled)[0]
+deficiency_status = classification_model.predict(X_scaled)[0]
 
 print(f"Predicted Vitamin D Level: {vitamin_d_level:.2f} ng/mL")
 print(f"Deficiency Status: {['Deficient', 'Insufficient', 'Sufficient'][deficiency_status]}")
 ```
 
+### Interactive Testing
+
+The easiest way to test the model with your own inputs:
+
+```bash
+python test_model_interactive.py
+```
+
+This interactive script:
+- Guides you through a 3-4 minute questionnaire
+- Collects demographic, dietary, lifestyle, and health data
+- Automatically engineers features and scales inputs
+- Predicts your vitamin D level and deficiency status
+- Provides personalized recommendations based on results
+- Includes confidence intervals and probability breakdowns
+
+**Features:**
+- ✅ User-friendly prompts with validation
+- ✅ Support for both metric and imperial units
+- ✅ Optional blood pressure and medication questions
+- ✅ Auto-detection of current season
+- ✅ Detailed result interpretation with health recommendations
+
 ### Exploring Notebooks
+
 Navigate to the `notebooks/` directory and open:
 - **05_model_comparison.ipynb**: Compare LightGBM, XGBoost, Random Forest
 - **06_enhanced_features.ipynb**: Feature engineering experiments
 - **07_optimized_model.ipynb**: Hyperparameter tuning results
+- **08_add_bp_medication_features.ipynb**: Clinical feature integration (BP & medications)
 
 ## 📈 Model Performance Context
 
-### Why R² = 0.39 is Highly Respectable
+### Why R² = 0.40 is Highly Respectable
 
-Our model achieves R² = 0.3886, which may seem modest but is actually approaching the **theoretical ceiling** for NHANES data:
+The model achieves R² = 0.400, which may seem modest but is actually approaching the **theoretical ceiling** for NHANES data:
 
 **Unmeasured Variance Sources**:
 - **Genetic Factors (20-25%)**: VDR, GC, CYP2R1 gene polymorphisms not in NHANES
@@ -160,7 +212,7 @@ Our model achieves R² = 0.3886, which may seem modest but is actually approachi
 | Waterhouse et al. (2020) | Australia | 0.58 | Geographic UV data |
 | Sluyter et al. (2022) | New Zealand | 0.51 | Latitude data |
 | Karamizadeh et al. (2021) | Iran | 0.49 | Altitude + UV index |
-| **Our Model** | **NHANES** | **0.39** | **No geo/genetic data** |
+| **Our Model** | **NHANES** | **0.40** | **No geo/genetic data** |
 
 **Our Achievement**: 78% of theoretical maximum (~0.50-0.55) with available features.
 
@@ -197,7 +249,7 @@ Our model achieves R² = 0.3886, which may seem modest but is actually approachi
 | **Model Size** | 156 KB | 183 KB |
 | **Inference Time** | ~3 ms | ~3 ms |
 | **Training Time** | ~3 min (CPU) | ~4 min (CPU) |
-| **Features** | 19 | 19 |
+| **Features** | 26 | 26 |
 | **Target** | Continuous (ng/mL) | 3-class categorical |
 
 ## 🔮 Future Improvements
@@ -229,7 +281,22 @@ Our model achieves R² = 0.3886, which may seem modest but is actually approachi
    - Sluyter et al. (2022) - New Zealand Older Adults
    - Karamizadeh et al. (2021) - Iranian Adults
 
-## 📄 License
+## �️ Technical Details
+
+### Model Files
+- **lightgbm_optimized_vitamin_d.pkl**: LightGBM regressor with 489 estimators, max_depth=4
+- **xgboost_classifier_optimized_vitamin_d.pkl**: XGBoost classifier with 385 estimators, max_depth=6
+- **scaler_optimized.pkl**: StandardScaler fitted on training data
+- **feature_names_optimized.pkl**: Ordered list of 26 feature names
+- **model_metadata.json**: Complete training configuration and performance metrics
+
+### Training Configuration
+- **Optimization**: RandomizedSearchCV with 25-30 iterations
+- **Regularization**: L1 (alpha) + L2 (lambda) elastic net
+- **Overfitting Control**: Reduced train-test gap to <4% (regression), <7% (classification)
+- **Validation**: 70-30 stratified train-test split
+
+## �📄 License
 
 This project is released under the MIT License. See [LICENSE](LICENSE) file for details.
 

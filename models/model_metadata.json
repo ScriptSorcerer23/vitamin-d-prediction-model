@@ -1,0 +1,173 @@
+{
+  "training_date": "2026-01-22T01:34:10.791468",
+  "dataset": {
+    "name": "NHANES 2005-2018",
+    "total_samples": 35978,
+    "train_samples": 25184,
+    "test_samples": 10794,
+    "train_test_split": "70-30",
+    "target_range": {
+      "min": 2.164,
+      "max": 168.8,
+      "mean": 25.41528989938296,
+      "std": 11.000134912380284
+    }
+  },
+  "regression_model": {
+    "type": "LightGBM",
+    "file": "lightgbm_optimized_vitamin_d.pkl",
+    "metrics": {
+      "test_r2": 0.40047302542545127,
+      "test_rmse": 8.568765399922366,
+      "test_mae": 6.395548564752084,
+      "train_r2": 0.43686051938689063,
+      "overfitting_gap": 0.036387493961439366
+    },
+    "hyperparameters": {
+      "boosting_type": "gbdt",
+      "class_weight": null,
+      "colsample_bytree": 0.7135207573518458,
+      "importance_type": "split",
+      "learning_rate": 0.028313193205101,
+      "max_depth": 4,
+      "min_child_samples": 48,
+      "min_child_weight": 0.001,
+      "min_split_gain": 0.0,
+      "n_estimators": 489,
+      "n_jobs": null,
+      "num_leaves": 52,
+      "objective": "regression",
+      "random_state": 42,
+      "reg_alpha": 0.13606612469231766,
+      "reg_lambda": 1.2953802410827246,
+      "subsample": 0.6001821319483606,
+      "subsample_for_bin": 200000,
+      "subsample_freq": 0,
+      "metric": "rmse",
+      "verbose": -1
+    }
+  },
+  "classification_model": {
+    "type": "XGBoost",
+    "file": "xgboost_classifier_optimized_vitamin_d.pkl",
+    "metrics": {
+      "test_accuracy": 0.563183249953678,
+      "train_accuracy": 0.6273824650571792,
+      "overfitting_gap": 0.06419921510350124
+    },
+    "classes": {
+      "0": "Deficient (<20 ng/mL)",
+      "1": "Insufficient (20-30 ng/mL)",
+      "2": "Sufficient (\u226530 ng/mL)"
+    },
+    "hyperparameters": {
+      "objective": "multi:softprob",
+      "base_score": null,
+      "booster": null,
+      "callbacks": null,
+      "colsample_bylevel": null,
+      "colsample_bynode": null,
+      "colsample_bytree": 0.7571995413729056,
+      "device": null,
+      "early_stopping_rounds": null,
+      "enable_categorical": false,
+      "eval_metric": null,
+      "feature_types": null,
+      "feature_weights": null,
+      "gamma": null,
+      "grow_policy": null,
+      "importance_type": null,
+      "interaction_constraints": null,
+      "learning_rate": 0.0176979909828793,
+      "max_bin": null,
+      "max_cat_threshold": null,
+      "max_cat_to_onehot": null,
+      "max_delta_step": null,
+      "max_depth": 6,
+      "max_leaves": null,
+      "min_child_weight": 3,
+      "missing": NaN,
+      "monotone_constraints": null,
+      "multi_strategy": null,
+      "n_estimators": 385,
+      "n_jobs": -1,
+      "num_parallel_tree": null,
+      "random_state": 42,
+      "reg_alpha": 0.8804678390152577,
+      "reg_lambda": 1.7487080962675865,
+      "sampling_method": null,
+      "scale_pos_weight": null,
+      "subsample": 0.7739084214594285,
+      "tree_method": null,
+      "validate_parameters": null,
+      "verbosity": 0,
+      "num_class": 3
+    }
+  },
+  "preprocessing": {
+    "scaler": "StandardScaler",
+    "scaler_file": "scaler_optimized.pkl",
+    "feature_engineering": [
+      "Seasonal encoding (sine-cosine)",
+      "Polynomial features (BMI\u00b2, Age\u00b2)",
+      "Total vitamin D intake",
+      "Ethnicity \u00d7 BMI interaction",
+      "Supplement \u00d7 Season interaction",
+      "BMI categories"
+    ]
+  },
+  "features": {
+    "total": 26,
+    "core": [
+      "Age",
+      "Sex",
+      "Ethnicity",
+      "BMI",
+      "supplement_vitd_mcg",
+      "dietary_vitd_mcg",
+      "calories",
+      "smoked_100_cigarettes",
+      "vigorous_work",
+      "moderate_work"
+    ],
+    "engineered": [
+      "month_sin",
+      "month_cos",
+      "BMI_squared",
+      "Age_squared",
+      "total_vitd_intake",
+      "Ethnicity_BMI",
+      "supplement_season_sin",
+      "supplement_season_cos",
+      "BMI_category"
+    ],
+    "all": [
+      "Age",
+      "Sex",
+      "Ethnicity",
+      "BMI",
+      "supplement_vitd_mcg",
+      "dietary_vitd_mcg",
+      "calories",
+      "smoked_100_cigarettes",
+      "vigorous_work",
+      "moderate_work",
+      "systolic_bp",
+      "diastolic_bp",
+      "takes_glucocorticoid",
+      "takes_anticonvulsant",
+      "takes_cholesterol_binder",
+      "takes_weightloss_drug",
+      "takes_vitd_affecting_med",
+      "month_sin",
+      "month_cos",
+      "BMI_squared",
+      "Age_squared",
+      "total_vitd_intake",
+      "Ethnicity_BMI",
+      "supplement_season_sin",
+      "supplement_season_cos",
+      "BMI_category"
+    ]
+  }
+}
